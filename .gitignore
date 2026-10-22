@@ -1,0 +1,45 @@
+# Never commit credentials or per-device Hermes state.
+.env
+.env.*
+!.env.template
+auth.json
+auth*.lock
+credentials*
+*.pem
+*.key
+*.db
+*.db-*
+*.sqlite*
+*.log
+*.lock
+*.tar
+*.tar.gz
+*.zip
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Personal data and runtime state (any depth).
+memories/
+sessions/
+logs/
+cache/
+backups/
+runtime/
+workspace/
+home/
+plans/
+pairing/
+platforms/
+audio_cache/
+image_cache/
+terminal-sessions/
+.hermes_history
+skills/.*
+
+# Model weights are downloaded by Ollama, not stored in git.
+*.gguf
+*.safetensors
+*.bin

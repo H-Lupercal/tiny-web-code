@@ -1,0 +1,31 @@
+name: Profile checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.10'
+      - name: Run offline installer tests
+        run: python -m unittest discover -s tests -v
+      - name: Check Python syntax
+        run: python -m compileall -q scripts tests
+      - name: Ensure runtime state is not committed
+        run: |
+          python - <<'PY'
+          import pathlib, subprocess
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          forbidden = {'memories', 'sessions', 'logs', 'cache', 'backups', 'runtime', 'workspace', 'home', 'pairing', 'platforms', '__pycache__'}
+          for name in filter(None, paths):
+              path = pathlib.PurePosixPath(name)
+              assert not forbidden.intersection(path.parts), name
+              assert not any(part == '.env' or part.startswith('.env.') for part in path.parts), name
+              assert path.suffix not in {'.db', '.sqlite', '.gguf', '.safetensors', '.pyc'}, name
+          print('PASS: no personal runtime state or model weights tracked')
+          PY

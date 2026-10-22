@@ -1,0 +1,13 @@
+name: tiny-web-code
+version: 1.0.0
+description: Small local Qwen3.5 2B agent for web searches and Python code experiments.
+hermes_requires: '>=0.22.4'
+author: H-Lupercal
+distribution_owned:
+  - config.yaml
+  - profile.yaml
+  - SOUL.md
+  - .no-bundled-skills
+  - skills
+  - assets
+  - distribution.yaml

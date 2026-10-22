@@ -1,0 +1,25 @@
+model:
+  default: qwen3.5:2b-64k
+  provider: custom
+  base_url: http://127.0.0.1:11434/v1
+  context_length: 65536
+  ollama_num_ctx: 65536
+_config_version: 51
+agent:
+  coding_context: "off"
+  max_turns: 4
+  disabled_toolsets:
+    - project
+  reasoning_overrides:
+    qwen3.5:2b-64k: none
+platform_toolsets:
+  cli:
+    - web
+    - code_execution
+approvals:
+  mode: smart
+  single_query_mode: deny
+code_execution:
+  mode: strict
+display:
+  personality: concise

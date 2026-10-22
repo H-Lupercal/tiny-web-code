@@ -1,0 +1,7 @@
+# Rebuild the profile's local model alias without machine-specific blob paths.
+FROM qwen3.5:2b
+PARAMETER num_ctx 65536
+PARAMETER presence_penalty 1.5
+PARAMETER temperature 1
+PARAMETER top_k 20
+PARAMETER top_p 0.95
