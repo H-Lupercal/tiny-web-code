@@ -84,5 +84,31 @@ class SetupTests(unittest.TestCase):
             run.assert_not_called()
 
 
+    def test_fresh_install_downloads_and_copies_locked_source(self):
+        lock = json.loads((ROOT / "setup-lock.json").read_text())["ollama"]["base_model"]
+        source = {"name": lock["pull_source"], "digest": lock["digest"]}
+        base = {"name": setup.BASE, "digest": lock["digest"]}
+        with patch.object(setup, "api", side_effect=[
+            {"models": []}, {"models": [source]}, {"models": [source, base]},
+            self.valid_info(), {"models": [source, base]}, self.valid_info(),
+        ]), patch.object(setup, "run") as run:
+            setup.ensure_models()
+        self.assertEqual([call.args[:3] for call in run.call_args_list], [
+            ("ollama", "pull", source["name"]), ("ollama", "cp", source["name"]),
+            ("ollama", "create", setup.MODEL),
+        ])
+        self.assertEqual(run.call_args_list[1].args[3], setup.BASE)
+
+    def test_fresh_install_never_aliases_a_changed_download(self):
+        source = json.loads((ROOT / "setup-lock.json").read_text())["ollama"]["base_model"]["pull_source"]
+        with patch.object(setup, "api", side_effect=[
+            {"models": []}, {"models": [{"name": source, "digest": "changed"}]},
+        ]), patch.object(setup, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "does not match the locked digest"):
+                setup.ensure_models(allow_drift=True)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_args.args, ("ollama", "pull", source))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,6 +10,7 @@
     "api_url": "http://127.0.0.1:11434",
     "base_model": {
       "name": "qwen3.5:2b",
+      "pull_source": "dhiltgen/qwen3.5:2b-q8_0-ggml",
       "size": 2741192820,
       "digest": "324d162be6ca5629ae4517c8710434d0bd2d665bc94dbad46e9af8fbf8a2f0df",
       "details": {

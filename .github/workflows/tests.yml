@@ -16,6 +16,10 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Check Python syntax
         run: python -m compileall -q scripts tests
+      - name: Check bootstrap shell syntax and help
+        run: |
+          bash -n install.sh
+          bash install.sh --help
       - name: Ensure runtime state is not committed
         run: |
           python - <<'PY'

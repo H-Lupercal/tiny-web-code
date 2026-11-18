@@ -83,15 +83,27 @@ def ensure_models(allow_drift: bool = False, check_only: bool = False) -> None:
         ) from exc
     # Do not let an inherited OLLAMA_HOST send the CLI to a different server.
     env = dict(os.environ, OLLAMA_HOST=API)
+    base_lock = lock["ollama"]["base_model"]
+    recorded = base_lock["digest"]
     base = find_model(models, BASE)
     if base is None:
         if check_only:
             raise RuntimeError(f"Missing base model: {BASE}")
-        run("ollama", "pull", BASE, env=env)
+        # The original library tag has moved. Obtain the exact original manifest
+        # from the recorded Ollama registry tag before creating the local name.
+        source = base_lock["pull_source"]
+        if find_model(models, source) is None:
+            run("ollama", "pull", source, env=env)
+        models = api("/api/tags")["models"]
+        candidate = find_model(models, source)
+        if candidate is None or candidate.get("digest") != recorded:
+            raise RuntimeError(f"{source} does not match the locked digest. No local base alias was created.")
+        if find_model(models, BASE) is None:
+            run("ollama", "cp", source, BASE, env=env)
         base = find_model(api("/api/tags")["models"], BASE)
     if base is None:
         raise RuntimeError(f"Ollama did not register {BASE} after pulling it")
-    recorded = lock["ollama"]["base_model"]["digest"]
+
     if base.get("digest") != recorded:
         message = (
             f"{BASE} differs from the recorded source model.\n"

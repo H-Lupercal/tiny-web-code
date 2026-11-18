@@ -9,6 +9,33 @@ not changed by this repository.
 
 ## Install on another device
 
+### Automatic install (Ubuntu 22.04+ / Debian 12+)
+
+Download and extract the project archive, then run this from the extracted folder:
+
+```bash
+bash install.sh
+```
+
+The script uses the official Hermes Agent and Ollama installers if those programs
+are missing. It starts local Ollama if needed, downloads and verifies the
+original ~2.7 GB model, installs the profile, and opens terminal chat. Run it as
+your normal account; it may ask for `sudo` for system packages or Ollama. No
+model API key or GitHub login is needed for local chat from the archive. Add
+`--with-web` to install and select DDGS for keyless web search. Searches go over
+the internet and may be rate-limited. This option does not set up a provider
+for page extraction.
+
+Use `bash install.sh --install-only` to skip opening chat, or `--name my-profile`
+to install alongside an existing profile. The script does not upgrade existing
+apps or overwrite existing profiles or model aliases. To reopen chat, run
+`hermes -p tiny-web-code` (open a new terminal if `hermes` isn't on your PATH
+yet). If Ollama wasn't installed as a startup service, you may need to run
+`ollama serve` after reboot. Keep the extracted folder if you want Hermes to
+update from it later.
+
+### Manual install
+
 Prerequisites:
 
 - Git and Python 3.10+ (`python3` below; `python` also works).
@@ -24,22 +51,20 @@ Prerequisites:
   the required amount depends on the inference backend and context use.
   A GPU is not required, but CPU inference can be slow.
 
-This repository is private. Authenticate GitHub on the destination first, then:
+From a fresh checkout:
 
 ```bash
-gh auth login
-gh repo clone H-Lupercal/tiny-web-code
+git clone https://github.com/H-Lupercal/tiny-web-code.git
 cd tiny-web-code
 python3 scripts/setup.py
 hermes -p tiny-web-code
 ```
 
-If you use SSH or another Git credential helper, ordinary `git clone` works too;
-GitHub CLI is only used to obtain this private checkout, not by the setup script.
-
 The setup script:
 
-1. Pulls `qwen3.5:2b` if missing and checks its digest against `setup-lock.json`.
+1. Checks an existing `qwen3.5:2b` or pulls the exact original manifest via the
+   `pull_source` recorded in `setup-lock.json`. The default upstream tag has
+   moved, so setup verifies the full digest before copying to the local name.
 2. Builds `qwen3.5:2b-64k` using the portable `Modelfile`, or validates an existing
    alias without overwriting it.
 3. Installs the local checkout using Hermes' native profile-distribution installer.
@@ -49,12 +74,13 @@ profile, copy secrets, or run inference. Use `--name another-name` to install
 alongside a profile of the same name. That only changes the Hermes profile name;
 all copies still reference the same Ollama alias.
 
-Upstream Ollama tags are mutable. If the base digest has changed, setup stops
-instead of silently claiming to reproduce the original model. Review the change,
-then use `python3 scripts/setup.py --allow-model-drift` if you accept the newer
-weights. The original versions, full model digests, and Hermes commit are recorded
-in `setup-lock.json`; this is provenance, not a vendored copy or an automatic
-Hermes/Ollama version pin.
+Upstream Ollama tags are mutable. If the download source changes digest, setup
+stops. If you already have a different local `qwen3.5:2b`, setup also stops by
+default. After reviewing the change, `python3 scripts/setup.py --allow-model-drift`
+can accept the existing local base, but will still refuse to overwrite an
+incompatible alias. The original versions, model digests, and Hermes commit are
+recorded in `setup-lock.json`; this is provenance, not a vendored copy or an
+automatic Hermes/Ollama version pin.
 
 ## What is preserved
 
@@ -143,7 +169,7 @@ updates. After reviewing a changed repo config, use the explicit
 Re-run model validation if `Modelfile` or `setup-lock.json` changes.
 
 Alternatively, if you already prepared the model, Hermes can install this
-repository directly (Git must already have access to the private repo):
+repository directly:
 
 ```bash
 hermes profile install https://github.com/H-Lupercal/tiny-web-code --yes
